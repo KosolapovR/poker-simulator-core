@@ -1,7 +1,6 @@
-export const pocketCardsToCardValue = (a: string, b: string) => {
-  if (a.length !== 2 || b.length !== 2)
-    throw Error("Card length should be equal 2");
+import { CardType } from "../type";
 
+export const pocketCardsToCardValue = (a: CardType, b: CardType): string => {
   const [firstValue, firstSuit] = a.split("");
   const [secondValue, secondSuit] = b.split("");
 

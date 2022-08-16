@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest",
-    "build": "rimraf dist && tsc && rollup -c rollup.config.js"
+    "test-report":"jest --collectCoverage",
+    "build": "rimraf dist && tsc && rollup -c rollup.config.js && rimraf lib"
   },
   "author": "Roman Kosolapov <kosolapov-r@bk.ru>",
   "license": "ISC",

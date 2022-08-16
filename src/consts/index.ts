@@ -1,6 +1,6 @@
-import { ActionType, CardType } from "../type";
+import { ActionType } from "../type";
 
-const DECK: CardType[] = [
+const DECK = [
   "Ah",
   "Kh",
   "Qh",
@@ -53,7 +53,7 @@ const DECK: CardType[] = [
   "4d",
   "3d",
   "2d",
-];
+] as const;
 const TOTAL_COMBINATIONS = 1326;
 const PAIRED_COMBINATIONS = 6; //12
 const SUITED_COMBINATIONS = 4; //78
@@ -229,7 +229,7 @@ const CARD_VALUES = [
   "43o",
   "42o",
   "32o",
-];
+] as const;
 
 const ACTION: { [key in ActionType]: ActionType } = {
   bet: "bet",
@@ -239,6 +239,8 @@ const ACTION: { [key in ActionType]: ActionType } = {
   raise: "raise",
 };
 
+const POSITION_ORDER = ["bb", "sb", "btn", "cut", "mp", "utg"] as const;
+
 export {
   DECK,
   CARD_VALUES,
@@ -247,4 +249,5 @@ export {
   SUITED_COMBINATIONS,
   OFFSUITED_COMBINATIONS,
   ACTION,
+  POSITION_ORDER,
 };

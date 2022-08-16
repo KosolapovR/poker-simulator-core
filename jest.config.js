@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   preset: "ts-jest",
   globals: {
     "ts-jest": {
@@ -12,5 +12,5 @@ module.exports = {
   transform: {
     "^.+\\.(t|j)s$": "ts-jest",
   },
-  coverageDirectory: "../coverage",
+  coverageDirectory: "./coverage",
 };

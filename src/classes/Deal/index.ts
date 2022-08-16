@@ -1,8 +1,11 @@
-import { RoundType } from "../../type";
+import { CardType, RoundType } from "../../type";
 import { generateId } from "../../utils";
 import { Player } from "../Player";
 import { DealHistory } from "../DealHistory";
 import { Action } from "../Action";
+import { DECK } from "../../consts";
+import { AI } from "../AI";
+import { getNextPlayer } from "../../utils/getNextPlayer";
 
 export interface IDeal {
   getId: () => string;
@@ -10,9 +13,16 @@ export interface IDeal {
   getDealHistory: () => DealHistory;
   getRound: () => RoundType;
   setRound: (r: RoundType) => {};
-  removePlayer: (p: Player) => {};
+  removePlayer: (p: Player) => {} | void;
   addAction: (a: Action) => {};
-  getCurrentActivePlayer: () => Player | void;
+  getCurrentActivePlayer: () => Player | AI | void;
+  generateFlop: () => [CardType, CardType, CardType];
+  generateTurn: () => CardType;
+  generateRiver: () => CardType;
+  getFlop: () => [CardType, CardType, CardType] | undefined;
+  getTurn: () => CardType | undefined;
+  getRiver: () => CardType | undefined;
+  getCurrentDeck: () => CardType[];
 }
 
 export type IDealParams = {
@@ -24,11 +34,18 @@ export class Deal implements IDeal {
   private round: RoundType = "preflop";
   private players: Player[];
   private readonly dealHistory: DealHistory;
+  private currentDeck: CardType[] = [...DECK];
+  private flop?: [CardType, CardType, CardType];
+  private turn?: CardType;
+  private river?: CardType;
+  private currentActivePlayer?: Player | AI;
 
   constructor({ players }: IDealParams) {
     this.id = generateId();
     this.players = players;
     this.dealHistory = new DealHistory();
+    this.dealCards();
+    this.currentActivePlayer = players[players.length - 1];
   }
 
   public getRound() {
@@ -47,7 +64,7 @@ export class Deal implements IDeal {
     const playerToRemove = this.players.find(
       (p) => p.getId() === player.getId()
     );
-    if (!playerToRemove) throw Error("player not found");
+    if (!playerToRemove) return;
 
     this.players = this.players.filter(
       (p) => p.getId() !== playerToRemove.getId()
@@ -58,11 +75,19 @@ export class Deal implements IDeal {
 
   public addAction(action: Action) {
     this.dealHistory.addAction(action);
+    const currPlayer = this.getCurrentActivePlayer();
+    const nextPlayer = this.getNextPlayer();
+
+    if (action.getType() === "fold" && currPlayer) {
+      this.removePlayer(currPlayer);
+    }
+
+    this.currentActivePlayer = nextPlayer;
 
     return this;
   }
 
-  public getDealHistory(): DealHistory {
+  public getDealHistory() {
     return this.dealHistory;
   }
 
@@ -70,7 +95,77 @@ export class Deal implements IDeal {
     return this.id;
   }
 
-  public getCurrentActivePlayer(): Player | undefined {
-    return undefined;
+  public getCurrentActivePlayer() {
+    return this.currentActivePlayer;
+  }
+
+  public generateFlop() {
+    const [card1] = this.currentDeck.splice(
+      Math.floor(Math.random() * this.currentDeck.length),
+      1
+    );
+    const [card2] = this.currentDeck.splice(
+      Math.floor(Math.random() * this.currentDeck.length),
+      1
+    );
+    const [card3] = this.currentDeck.splice(
+      Math.floor(Math.random() * this.currentDeck.length),
+      1
+    );
+    this.flop = [card1, card2, card3];
+    return this.flop;
+  }
+
+  public generateTurn() {
+    const [card] = this.currentDeck.splice(
+      Math.floor(Math.random() * this.currentDeck.length),
+      1
+    );
+    this.turn = card;
+    return this.turn;
+  }
+
+  public generateRiver() {
+    const [card] = this.currentDeck.splice(
+      Math.floor(Math.random() * this.currentDeck.length),
+      1
+    );
+    this.river = card;
+    return this.river;
+  }
+
+  public getFlop() {
+    return this.flop;
+  }
+
+  public getTurn() {
+    return this.turn;
+  }
+
+  public getRiver() {
+    return this.river;
+  }
+
+  public getCurrentDeck() {
+    return this.currentDeck;
+  }
+
+  private dealCards = () => {
+    this.players.forEach((p: Player) => {
+      const [card1] = this.currentDeck.splice(
+        Math.floor(Math.random() * this.currentDeck.length),
+        1
+      );
+      const [card2] = this.currentDeck.splice(
+        Math.floor(Math.random() * this.currentDeck.length),
+        1
+      );
+
+      p.setCards([card1, card2]);
+    });
+  };
+
+  public getNextPlayer() {
+    return getNextPlayer(this);
   }
 }

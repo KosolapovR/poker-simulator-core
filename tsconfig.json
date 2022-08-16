@@ -14,7 +14,7 @@
     "noEmitOnError": true,
     "lib": ["es2017"],
     "strict": true,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"],
