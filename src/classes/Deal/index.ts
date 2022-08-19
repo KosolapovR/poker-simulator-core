@@ -5,7 +5,7 @@ import { DealHistory } from "../DealHistory";
 import { Action } from "../Action";
 import { DECK } from "../../consts";
 import { AI } from "../AI";
-import { getNextPlayer } from "../../utils/getNextPlayer";
+import { getNextPlayer } from "../../utils";
 
 export interface IDeal {
   getId: () => string;
@@ -76,9 +76,17 @@ export class Deal implements IDeal {
   public addAction(action: Action) {
     this.dealHistory.addAction(action);
     const currPlayer = this.getCurrentActivePlayer();
+    const shouldRemovePlayer = action.getType() === "fold" && currPlayer;
+    if (
+      Deal.isDealEndWithNoShowdown(
+        shouldRemovePlayer ? this.players.length - 1 : this.players.length
+      )
+    ) {
+      this.setRound("showdown");
+    }
     const nextPlayer = this.getNextPlayer();
 
-    if (action.getType() === "fold" && currPlayer) {
+    if (shouldRemovePlayer) {
       this.removePlayer(currPlayer);
     }
 
@@ -165,7 +173,11 @@ export class Deal implements IDeal {
     });
   };
 
-  public getNextPlayer() {
+  private getNextPlayer() {
     return getNextPlayer(this);
+  }
+
+  private static isDealEndWithNoShowdown(playersCount: number) {
+    return playersCount === 1;
   }
 }

@@ -37,6 +37,39 @@ describe("getNextPlayer", () => {
     }
   });
 
+  it("should return undefined on non-showdown", () => {
+    const PS = new PokerSimulator({ players });
+    const createdDeal = PS.startDeal();
+    if (!createdDeal) {
+      expect(createdDeal).toBeUndefined();
+      return;
+    }
+
+    const otherPlayersAction = new Action({
+      type: "fold",
+      round: createdDeal.getRound(),
+    });
+
+    const bbPlayerAction = new Action({
+      type: "check",
+      round: createdDeal.getRound(),
+    });
+
+    PS.handlePlayerAction(otherPlayersAction); //utg
+    PS.handlePlayerAction(otherPlayersAction); //mp
+    PS.handlePlayerAction(otherPlayersAction); //cut
+    PS.handlePlayerAction(otherPlayersAction); //btn
+    PS.handlePlayerAction(otherPlayersAction); //sb
+    const dealAfterAction = PS.handlePlayerAction(bbPlayerAction); //bb
+
+    if (!dealAfterAction) {
+      expect(createdDeal).toBeUndefined();
+      return;
+    }
+
+    expect(dealAfterAction.getCurrentActivePlayer()).toBeUndefined();
+  });
+
   it("should work in firstRound", () => {
     const PS = new PokerSimulator({ players });
     const createdDeal = PS.startDeal();
