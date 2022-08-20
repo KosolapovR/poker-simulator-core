@@ -8,7 +8,7 @@ import { POSITION_ORDER } from "../../consts";
 import { sortPlayersByPosition } from "../../utils";
 
 export interface IPokerSimulator {
-  handlePlayerAction: (action: Action) => Deal | undefined;
+  handlePlayerAction: (action: Action) => {};
   startDeal: () => Deal | undefined;
   removePlayer: (player: Player) => void;
   getCurrentDeal: () => Deal | undefined;
@@ -28,8 +28,9 @@ export class PokerSimulator implements IPokerSimulator {
   constructor({ players, behaviorType = "tag" }: IPokerSimulatorParams) {
     this.behaviorType = behaviorType;
     this.players = players;
+    this.players.forEach((p) => p.setStatus("inGame"));
   }
-  public handlePlayerAction(action: Action): Deal | undefined {
+  public handlePlayerAction(action: Action) {
     this.currentDeal?.addAction(action);
 
     while (
@@ -40,7 +41,7 @@ export class PokerSimulator implements IPokerSimulator {
       this.currentDeal?.addAction(AI.makeDecision(this.currentDeal));
     }
 
-    return this.currentDeal;
+    return this;
   }
 
   public startDeal(): Deal | undefined {

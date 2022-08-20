@@ -1,11 +1,10 @@
 import { CardType, RoundType } from "../../type";
-import { generateId } from "../../utils";
+import { generateId, sortPlayersByPosition } from "../../utils";
 import { Player } from "../Player";
 import { DealHistory } from "../DealHistory";
 import { Action } from "../Action";
-import { DECK } from "../../consts";
+import { DECK, POSITION_ORDER } from "../../consts";
 import { AI } from "../AI";
-import { getNextPlayer } from "../../utils";
 
 export interface IDeal {
   getId: () => string;
@@ -15,7 +14,7 @@ export interface IDeal {
   setRound: (r: RoundType) => {};
   removePlayer: (p: Player) => {} | void;
   addAction: (a: Action) => {};
-  getCurrentActivePlayer: () => Player | AI | void;
+  getCurrentActivePlayer: () => Player | AI | undefined;
   generateFlop: () => [CardType, CardType, CardType];
   generateTurn: () => CardType;
   generateRiver: () => CardType;
@@ -23,6 +22,7 @@ export interface IDeal {
   getTurn: () => CardType | undefined;
   getRiver: () => CardType | undefined;
   getCurrentDeck: () => CardType[];
+  getAvailableActions: () => Action[];
 }
 
 export type IDealParams = {
@@ -74,16 +74,17 @@ export class Deal implements IDeal {
   }
 
   public addAction(action: Action) {
-    this.dealHistory.addAction(action);
+    this.dealHistory.addAction(
+      action
+        .setNumber(this.getDealHistory().getActions().length + 1)
+        .setRound(this.round)
+    );
+
+    this.changeRoundIfNecessary(action);
+
     const currPlayer = this.getCurrentActivePlayer();
     const shouldRemovePlayer = action.getType() === "fold" && currPlayer;
-    if (
-      Deal.isDealEndWithNoShowdown(
-        shouldRemovePlayer ? this.players.length - 1 : this.players.length
-      )
-    ) {
-      this.setRound("showdown");
-    }
+
     const nextPlayer = this.getNextPlayer();
 
     if (shouldRemovePlayer) {
@@ -158,6 +159,10 @@ export class Deal implements IDeal {
     return this.currentDeck;
   }
 
+  public getAvailableActions() {
+    return [];
+  }
+
   private dealCards = () => {
     this.players.forEach((p: Player) => {
       const [card1] = this.currentDeck.splice(
@@ -174,7 +179,42 @@ export class Deal implements IDeal {
   };
 
   private getNextPlayer() {
-    return getNextPlayer(this);
+    if (
+      !this.getCurrentActivePlayer() ||
+      this.getRound() === "nonShowdown" ||
+      this.getRound() === "showdown"
+    ) {
+      return undefined;
+    }
+
+    if (this.getDealHistory().getActions().length === 0) {
+      return this.getCurrentActivePlayer();
+    }
+    const currPlayerPos = this.getCurrentActivePlayer()?.getPosition();
+    if (!currPlayerPos) return undefined;
+    const index = POSITION_ORDER.indexOf(currPlayerPos);
+
+    const sorted = sortPlayersByPosition(this.getPlayers());
+    const isLastPlayerInTable = currPlayerPos === sorted[0].getPosition();
+    if (isLastPlayerInTable) {
+      return sorted[sorted.length - 1];
+    } else {
+      const nextPlayerPos = POSITION_ORDER[index - 1];
+      return this.getPlayers().find((p) => p.getPosition() === nextPlayerPos);
+    }
+  }
+
+  private changeRoundIfNecessary(lastAction: Action): void {
+    const currPlayer = this.getCurrentActivePlayer();
+    const shouldRemovePlayer = lastAction.getType() === "fold" && currPlayer;
+
+    if (
+      Deal.isDealEndWithNoShowdown(
+        shouldRemovePlayer ? this.players.length - 1 : this.players.length
+      )
+    ) {
+      this.setRound("nonShowdown");
+    }
   }
 
   private static isDealEndWithNoShowdown(playersCount: number) {

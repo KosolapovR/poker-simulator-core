@@ -4,7 +4,14 @@ export type CardType = typeof DECK[number];
 export type CardValueType = typeof CARD_VALUES[number];
 
 export type BehaviorType = "rock" | "lag" | "tag" | "lp" | "tp" | "maniac";
-export type RoundType = "preflop" | "flop" | "turn" | "river" | "showdown";
+export type RoundType =
+  | "preflop"
+  | "flop"
+  | "turn"
+  | "river"
+  | "showdown"
+  | "nonShowdown";
 export type ActionType = "fold" | "check" | "call" | "bet" | "raise";
 export type PositionType = typeof POSITION_ORDER[number];
 export type GameStatusType = "pending" | "inProgress";
+export type PlayerStatusType = "inGame" | "seatOut" | "allIn";

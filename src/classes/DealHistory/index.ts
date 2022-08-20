@@ -1,12 +1,10 @@
 import { Action } from "../Action";
 import { generateId } from "../../utils";
-import { RoundType } from "../../type";
 
 export interface IDealHistory {
   getId: () => string;
   getDateTime: () => string;
   getActions: () => Action[];
-  getActionsByRound: (round: RoundType) => Action[];
   addAction: (action: Action) => {};
 }
 export class DealHistory implements IDealHistory {
@@ -34,9 +32,5 @@ export class DealHistory implements IDealHistory {
 
   public getActions() {
     return this.actions;
-  }
-
-  public getActionsByRound(round: RoundType) {
-    return this.actions.filter((a) => a.getRound() === round);
   }
 }

@@ -29,6 +29,7 @@ export class AI extends Player implements IAI {
       turn: AI.getTurnAction,
       river: AI.getRiverAction,
       showdown: AI.getShowdownAction,
+      nonShowdown: AI.getShowdownAction,
     };
 
     const getActionByRoundFunc = roundMap[deal.getRound()];
@@ -37,21 +38,21 @@ export class AI extends Player implements IAI {
   }
 
   private static getPreFlopAction(): Action {
-    return new Action({ type: ACTION.check, round: "preflop" });
+    return new Action({ type: ACTION.check });
   }
 
   private static getFlopAction(): Action {
-    return new Action({ type: ACTION.check, round: "flop" });
+    return new Action({ type: ACTION.check });
   }
 
   private static getTurnAction(): Action {
-    return new Action({ type: ACTION.check, round: "turn" });
+    return new Action({ type: ACTION.check });
   }
 
   private static getRiverAction(): Action {
-    return new Action({ type: ACTION.check, round: "river" });
+    return new Action({ type: ACTION.check });
   }
   private static getShowdownAction(): Action {
-    return new Action({ type: ACTION.check, round: "showdown" });
+    return new Action({ type: ACTION.check });
   }
 }

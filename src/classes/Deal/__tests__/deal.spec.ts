@@ -1,91 +1,91 @@
 import { Deal } from "../index";
 import { Player } from "../../Player";
 import { PokerSimulator } from "../../PokerSimulator";
-import { getNextPlayer } from "../../../utils";
 import { Action } from "../../Action";
 
+const fold = (): Action =>
+  new Action({
+    type: "fold",
+  });
+
+const call = (): Action =>
+  new Action({
+    type: "call",
+  });
+const check = (): Action =>
+  new Action({
+    type: "check",
+  });
+
+const players = [
+  new Player({ name: "name1", chips: 1 }),
+  new Player({ name: "name2", chips: 1 }),
+  new Player({ name: "name3", chips: 1 }),
+  new Player({ name: "name4", chips: 1 }),
+  new Player({ name: "name5", chips: 1 }),
+  new Player({ name: "name6", chips: 1 }),
+];
+
 describe("getNextPlayer", () => {
-  const players = [
-    new Player({ name: "name1", chips: 1 }),
-    new Player({ name: "name2", chips: 1 }),
-    new Player({ name: "name3", chips: 1 }),
-    new Player({ name: "name4", chips: 1 }),
-    new Player({ name: "name5", chips: 1 }),
-    new Player({ name: "name6", chips: 1 }),
-  ];
-
-  it("should return undefined when not enough players", () => {
+  it("preflop, should return undefined when not enough players", () => {
     const PS = new PokerSimulator({ players: [players[0]] });
-    const createdDeal = PS.startDeal();
-    expect(createdDeal).toBeUndefined();
+    const deal = PS.startDeal();
+    expect(deal).toBeUndefined();
   });
 
-  it("should return undefined on illegal players count", () => {
+  it("preflop, should return undefined on illegal players count", () => {
     const PS = new PokerSimulator({ players: [...players, ...players] });
-    const createdDeal = PS.startDeal();
-    expect(createdDeal).toBeUndefined();
+    const deal = PS.startDeal();
+    expect(deal).toBeUndefined();
   });
 
-  it("should return first player when deal created", () => {
+  it("preflop, should return first player when deal created", () => {
     const PS = new PokerSimulator({ players });
-    const createdDeal = PS.startDeal();
+    const deal = PS.startDeal();
     const lastPlayer = players[players.length - 1];
-    if (createdDeal) {
-      expect(getNextPlayer(createdDeal)).toEqual(lastPlayer);
+    if (deal) {
+      expect(deal.getCurrentActivePlayer()).toEqual(lastPlayer);
     } else {
-      expect(createdDeal).toBeUndefined();
+      expect(deal).toBeUndefined();
     }
   });
 
-  it("should return undefined on non-showdown", () => {
+  it("preflop, should return undefined on non-showdown", () => {
     const PS = new PokerSimulator({ players });
-    const createdDeal = PS.startDeal();
-    if (!createdDeal) {
-      expect(createdDeal).toBeUndefined();
+    const deal = PS.startDeal();
+    if (!deal) {
+      expect(deal).toBeUndefined();
       return;
     }
 
-    const otherPlayersAction = new Action({
-      type: "fold",
-      round: createdDeal.getRound(),
-    });
-
-    const bbPlayerAction = new Action({
-      type: "check",
-      round: createdDeal.getRound(),
-    });
-
-    PS.handlePlayerAction(otherPlayersAction); //utg
-    PS.handlePlayerAction(otherPlayersAction); //mp
-    PS.handlePlayerAction(otherPlayersAction); //cut
-    PS.handlePlayerAction(otherPlayersAction); //btn
-    PS.handlePlayerAction(otherPlayersAction); //sb
-    const dealAfterAction = PS.handlePlayerAction(bbPlayerAction); //bb
+    PS.handlePlayerAction(fold()) //utg
+      .handlePlayerAction(fold()) //mp
+      .handlePlayerAction(fold()) //cut
+      .handlePlayerAction(fold()) //btn
+      .handlePlayerAction(fold()) // sb
+      .handlePlayerAction(check()); //bb
+    const dealAfterAction = PS.getCurrentDeal();
 
     if (!dealAfterAction) {
-      expect(createdDeal).toBeUndefined();
+      expect(deal).toBeUndefined();
       return;
     }
 
     expect(dealAfterAction.getCurrentActivePlayer()).toBeUndefined();
   });
 
-  it("should work in firstRound", () => {
+  it("preflop, should work in firstRound", () => {
     const PS = new PokerSimulator({ players });
-    const createdDeal = PS.startDeal();
-    if (!createdDeal) {
-      expect(createdDeal).toBeUndefined();
+    const deal = PS.startDeal();
+    if (!deal) {
+      expect(deal).toBeUndefined();
       return;
     }
 
-    const firstPlayerAction = new Action({
-      type: "fold",
-      round: createdDeal.getRound(),
-    });
-
-    const dealAfterAction = PS.handlePlayerAction(firstPlayerAction);
+    PS.handlePlayerAction(fold());
+    const dealAfterAction = PS.getCurrentDeal();
     if (!dealAfterAction) {
-      expect(createdDeal).toBeUndefined();
+      expect(deal).toBeUndefined();
       return;
     }
 
@@ -93,37 +93,51 @@ describe("getNextPlayer", () => {
     expect(dealAfterAction.getCurrentActivePlayer()).toEqual(secondPlayer);
   });
 
-  it("should work in secondRound", () => {
+  it("preflop, should work in firstRound on BB vs SB, current player - BB", () => {
     const PS = new PokerSimulator({ players });
-    const createdDeal = PS.startDeal();
-    if (!createdDeal) {
-      expect(createdDeal).toBeUndefined();
+    const deal = PS.startDeal();
+    if (!deal) {
+      expect(deal).toBeUndefined();
       return;
     }
 
-    const firstPlayerAction = new Action({
-      type: "fold",
-      round: createdDeal.getRound(),
-    });
+    PS.handlePlayerAction(fold()) //utg
+      .handlePlayerAction(fold()) //mp
+      .handlePlayerAction(fold()) //cut
+      .handlePlayerAction(fold()) //btn
+      .handlePlayerAction(call()) // sb
+      .handlePlayerAction(check()); //bb
 
-    const bbPlayerAction = new Action({
-      type: "check",
-      round: createdDeal.getRound(),
-    });
-
-    const otherPlayersAction = new Action({
-      type: "call",
-      round: createdDeal.getRound(),
-    });
-    PS.handlePlayerAction(firstPlayerAction); //utg
-    PS.handlePlayerAction(otherPlayersAction); //mp
-    PS.handlePlayerAction(otherPlayersAction); //cut
-    PS.handlePlayerAction(otherPlayersAction); //btn
-    PS.handlePlayerAction(otherPlayersAction); //sb
-    const dealAfterAction = PS.handlePlayerAction(bbPlayerAction); //bb
+    const dealAfterAction = PS.getCurrentDeal(); //bb
 
     if (!dealAfterAction) {
-      expect(createdDeal).toBeUndefined();
+      expect(deal).toBeUndefined();
+      return;
+    }
+
+    const sbPlayer = players[1]; //sb
+    expect(dealAfterAction.getCurrentActivePlayer()).toEqual(sbPlayer);
+  });
+
+  it("should work in secondRound", () => {
+    const PS = new PokerSimulator({ players });
+    const deal = PS.startDeal();
+    if (!deal) {
+      expect(deal).toBeUndefined();
+      return;
+    }
+
+    PS.handlePlayerAction(fold()) //utg
+      .handlePlayerAction(call()) //mp
+      .handlePlayerAction(call()) //cut
+      .handlePlayerAction(call()) //btn
+      .handlePlayerAction(call()) // sb
+      .handlePlayerAction(check()); //bb
+
+    const dealAfterAction = PS.getCurrentDeal();
+
+    if (!dealAfterAction) {
+      expect(deal).toBeUndefined();
       return;
     }
 
@@ -193,5 +207,32 @@ describe("discard cards", () => {
     const deal = new Deal({ players });
     const riverCard = deal.generateRiver();
     expect(deal.getCurrentDeck().includes(riverCard)).toBeFalsy();
+  });
+});
+
+describe("actions order numbers", () => {
+  it("should create correct order", function () {
+    const PS = new PokerSimulator({ players });
+    const deal = PS.startDeal();
+    if (!deal) {
+      expect(deal).toBeUndefined();
+      return;
+    }
+
+    PS.handlePlayerAction(fold()) //utg
+      .handlePlayerAction(fold()) //mp
+      .handlePlayerAction(fold()) //cut
+      .handlePlayerAction(fold()) //btn
+      .handlePlayerAction(fold()); // sb
+    const dealAfterAction = PS.getCurrentDeal();
+
+    if (!dealAfterAction) {
+      expect(deal).toBeUndefined();
+      return;
+    }
+    const actions = dealAfterAction.getDealHistory().getActions();
+    actions.forEach((action, index) =>
+      expect(action.getNumber()).toBe(index + 1)
+    );
   });
 });

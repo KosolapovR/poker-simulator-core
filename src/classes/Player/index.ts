@@ -1,4 +1,4 @@
-import { CardType, PositionType } from "../../type";
+import { CardType, PlayerStatusType, PositionType } from "../../type";
 import { generateId } from "../../utils";
 
 export interface IPlayer {
@@ -8,10 +8,12 @@ export interface IPlayer {
   getIsAI: () => boolean;
   setName: (s: string) => {};
   setChips: (n: number) => {};
-  getPosition: () => PositionType | void;
+  getPosition: () => PositionType | undefined;
   setPosition: (p: PositionType) => {};
   getCards: () => CardType[];
   setCards: (cards: [CardType, CardType]) => {};
+  getStatus: () => PlayerStatusType | undefined;
+  setStatus: (s: PlayerStatusType) => {};
 }
 
 type PlayerParamsType = {
@@ -27,6 +29,7 @@ export class Player implements IPlayer {
   private chips: number;
   private position?: PositionType;
   private cards: CardType[] | [] = [];
+  private status?: PlayerStatusType;
 
   constructor({ name, chips, isAI = false }: PlayerParamsType) {
     this.id = generateId();
@@ -76,6 +79,15 @@ export class Player implements IPlayer {
 
   public setCards(cards: [CardType, CardType]) {
     this.cards = cards;
+    return this;
+  }
+
+  public getStatus(): PlayerStatusType | undefined {
+    return this.status;
+  }
+
+  public setStatus(s: PlayerStatusType) {
+    this.status = s;
     return this;
   }
 }
